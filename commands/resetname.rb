@@ -1,0 +1,1 @@
+ctx.send 'NICK', 'Mnemosyne'
