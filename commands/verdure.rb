@@ -28,7 +28,7 @@ result_set = statement.execute_query
 count = result_set.get_int(1) if result_set.next
 
 # Get actual results
-statement = connection.prepare_statement('SELECT path, title, artist, album FROM media_file WHERE ' + clauses + ' ORDER BY id LIMIT 11')
+statement = connection.prepare_statement('SELECT path, title, artist, album FROM media_file WHERE ' + clauses + ' ORDER BY id LIMIT 1001')
 tokens.each_with_index do |e, i|
   statement.set_string(i + 1, "%#{sql_escape(e)}%")
 end
@@ -40,22 +40,28 @@ while result_set.next
 end
 
 # Reorder results: put full matches at the top
-result_data_reordered = []
-def reorder(source, target, query, indices)
-  source.delete_if do |e|
-    res = indices.all? { |i| query.include?(e[i]) }
-    target << e if res
-    res
+def full_match?(query, e, indices)
+  indices.all? { |i| query.include?(e[i]) }
+end
+v_query_downcase = v_query.downcase
+
+full_title_album, full_title, full_album, full_artist, remainder = [], [], [], [], []
+result_data.each do |e|
+  match_title, match_artist, match_album = [1, 2, 3].map { |i| v_query_downcase.include?(e[i]) }
+  if match_title && match_album
+    full_title_album << e
+  elsif match_title
+    full_title << e 
+  elsif match_album
+    full_album << e 
+  elsif match_artist
+    full_artist << e 
+  else
+    remainder << e
   end
 end
 
-v_query_downcase = v_query.downcase
-reorder(result_data, result_data_reordered, v_query_downcase, [1, 3]) # Full title and album match
-reorder(result_data, result_data_reordered, v_query_downcase, [1]) # Full title match
-reorder(result_data, result_data_reordered, v_query_downcase, [3]) # Full album match
-reorder(result_data, result_data_reordered, v_query_downcase, [2]) # Full artist match
-reorder(result_data, result_data_reordered, v_query_downcase, []) # remaining items
-result_data = result_data_reordered
+result_data = full_title_album + full_title + full_album + full_artist + remainder
 
 # Obtain selected one
 unless num_select.empty?
