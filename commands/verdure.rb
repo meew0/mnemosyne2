@@ -47,15 +47,15 @@ v_query_downcase = v_query.downcase
 
 full_title_album, full_title, full_album, full_artist, remainder = [], [], [], [], []
 result_data.each do |e|
-  match_title, match_artist, match_album = [1, 2, 3].map { |i| v_query_downcase.include?(e[i]) }
+  match_title, match_artist, match_album = [1, 2, 3].map { |i| v_query_downcase.include?(e[i].downcase) }
   if match_title && match_album
     full_title_album << e
   elsif match_title
-    full_title << e 
+    full_title << e
   elsif match_album
-    full_album << e 
+    full_album << e
   elsif match_artist
-    full_artist << e 
+    full_artist << e
   else
     remainder << e
   end
