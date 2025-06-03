@@ -6,6 +6,7 @@ IRC_BOLD = 2.chr
 ADJECTIVES = %w(lush vibrant serene tranquil flourishing verdant thriving pristine pure peaceful gentle abundant soothing refreshing radiant fresh calm nurturing serene majestic picturesque scenic inviting refreshing blissful lively enchanting bountiful harmonious rejuvenating blooming graceful delicate soft rich bright lush invigorating fragrant beautiful serene charming magical idyllic glorious natural welcoming)
 NOUNS = %w(meadow pond grove stream marsh glade forest fen creek lagoon thicket bayou swamp river wetland pool oasis brook estuary glen dell rainforest spring cove jungle bay vale pasture fenland lake waterfall fjord islet bluff reef woodland valley)
 
+SOURCE_FOLDER = '/music'
 TARGET_FOLDER = '/verdure-library'
 
 v_query = ARGV[2..-1].join(' ')
@@ -82,7 +83,8 @@ end
 if result_data.length == 0
   puts "No results found"
 elsif result_data.length == 1
-  file, *_ = result_data[0]
+  sub_path, *_ = result_data[0]
+  file = File.join(SOURCE_FOLDER, sub_path)
   name = nil
   name = (ADJECTIVES.sample(2) + NOUNS.sample(1)).join('-') while name.nil? || File.exist?(File.join(TARGET_FOLDER, name))
 
