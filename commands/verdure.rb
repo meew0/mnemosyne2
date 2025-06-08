@@ -172,7 +172,7 @@ elsif result_data.length == 1
     parts << NOUNS.sample(random: rng)
 
     name = parts.join('-')
-    target_path = File.join(TARGET_FOLDER, name)
+    target_path = File.join(TARGET_FOLDER, name + '.ogg')
     if File.exist?(target_path)
       # File exists, so only overwrite it if it has the same tags, otherwise try again
       target_tags = read_tags(target_path)
