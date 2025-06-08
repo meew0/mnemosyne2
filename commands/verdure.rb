@@ -4,6 +4,8 @@ require 'open3'
 require 'digest'
 require 'json'
 
+start_time = Time.now.to_f
+
 IRC_BOLD = 2.chr
 
 ADJECTIVES = %w(lush vibrant serene tranquil flourishing verdant thriving pristine pure peaceful gentle abundant soothing refreshing radiant fresh calm nurturing serene majestic picturesque scenic inviting refreshing blissful lively enchanting bountiful harmonious rejuvenating blooming graceful delicate soft rich bright lush invigorating fragrant beautiful serene charming magical idyllic glorious natural welcoming)
@@ -82,6 +84,8 @@ unless num_select.empty?
   end
   result_data = [result_data[num - 1]]
 end
+
+STDERR.puts "[verdure] lookup: #{Time.now.to_f - start_time}"
 
 def stringify_result(result)
   _, title, artist, album = result
@@ -218,3 +222,5 @@ else
     puts "##{i + 1}: #{stringify_result(result)}"
   end
 end
+
+STDERR.puts "[verdure] total: #{Time.now.to_f - start_time}"
