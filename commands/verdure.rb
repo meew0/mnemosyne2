@@ -43,6 +43,8 @@ while result_set.next
   result_data << [result_set.get_string('path'), result_set.get_string('title'), result_set.get_string('artist'), result_set.get_string('album')]
 end
 
+connection.close
+
 # Reorder results: put full matches at the top
 def full_match?(query, e, indices)
   indices.all? { |i| query.include?(e[i]) }
