@@ -99,7 +99,7 @@ def read_tags(file)
       "-print_format", "json",
       "-show_entries",
       "format_tags=title,artist,album,track:stream_tags=title,artist,album,track",
-      file_path
+      file
     ]
 
     # JRuby lets you reference Java classes directly under Java::...
