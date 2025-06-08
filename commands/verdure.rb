@@ -89,7 +89,7 @@ def stringify_result(result)
 end
 
 def read_tags(file)
-  json, status = Open3.capture2e('ffprobe', '-v', 'quiet', '-print_format', 'json', '-show_entries', 'format_tags=title,artist,album,track:stream_tags=title,artist,album,track', file)
+  json, status = Open3.capture2e('/usr/bin/ffprobe', '-v', 'quiet', '-print_format', 'json', '-show_entries', 'format_tags=title,artist,album,track:stream_tags=title,artist,album,track', file)
 
   unless status.success?
     STDERR.puts("[verdure] read_tags failed: #{json}")
