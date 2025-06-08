@@ -6,11 +6,14 @@ IRC_BOLD = 2.chr
 ADJECTIVES = %w(lush vibrant serene tranquil flourishing verdant thriving pristine pure peaceful gentle abundant soothing refreshing radiant fresh calm nurturing serene majestic picturesque scenic inviting refreshing blissful lively enchanting bountiful harmonious rejuvenating blooming graceful delicate soft rich bright lush invigorating fragrant beautiful serene charming magical idyllic glorious natural welcoming)
 NOUNS = %w(meadow pond grove stream marsh glade forest fen creek lagoon thicket bayou swamp river wetland pool oasis brook estuary glen dell rainforest spring cove jungle bay vale pasture fenland lake waterfall fjord islet bluff reef woodland valley)
 
+NAVIDROME_ACCENTS = { 'À' => 'A', 'Á' => 'A', 'Â' => 'A', 'Ã' => 'A', 'Ä' => 'A', 'Å' => 'A', 'Ă' => 'A', 'Æ' => 'AE', 'Ç' => 'C', 'È' => 'E', 'É' => 'E', 'Ê' => 'E', 'Ë' => 'E', 'Ì' => 'I', 'Í' => 'I', 'Î' => 'I', 'Ï' => 'I', 'Ð' => 'D', 'Ł' => 'L', 'Ñ' => 'N', 'Ò' => 'O', 'Ó' => 'O', 'Ô' => 'O', 'Õ' => 'O', 'Ö' => 'O', 'Ø' => 'O', 'Œ' => 'OE', 'Ř' => 'R', 'Ś' => 'S', 'Ș' => 'S', 'Ş' => 'S', 'Š' => 'S', 'Ț' => 'T', 'Ù' => 'U', 'Ú' => 'U', 'Ü' => 'U', 'Û' => 'U', 'Ý' => 'Y', 'Þ' => 'TH', 'ẞ' => 'SS', 'à' => 'a', 'á' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a', 'å' => 'a', 'ă' => 'a', 'æ' => 'ae', 'ç' => 'c', 'è' => 'e', 'é' => 'e', 'ê' => 'e', 'ë' => 'e', 'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i', 'ð' => 'd', 'ł' => 'l', 'ñ' => 'n', 'ń' => 'n', 'ò' => 'o', 'ó' => 'o', 'ô' => 'o', 'õ' => 'o', 'ō' => 'o', 'ö' => 'o', 'ø' => 'o', 'œ' => 'oe', 'ř' => 'r', 'ś' => 's', 'ș' => 's', 'ş' => 's', 'š' => 's', 'ț' => 't', 'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ū' => 'u', 'ü' => 'u', 'ý' => 'y', 'ÿ' => 'y', 'ż' => 'z', 'þ' => 'th', 'ß' => 'ss' }
+
 SOURCE_FOLDER = '/music'
 TARGET_FOLDER = '/verdure-library'
 
 v_query = ARGV[2..-1].join(' ')
-num_select, tokens = v_query.split(/[[:space:]]+/).partition { |e| e =~ /^#\d+$/ }
+v_query_clean = v_query.chars.map { |c| NAVIDROME_ACCENTS[c] || c }.join
+num_select, tokens = v_query_clean.split(/[[:space:]]+/).partition { |e| e =~ /^#\d+$/ }
 clauses = (["full_text LIKE ? ESCAPE '!'"] * tokens.length).join(' AND ')
 
 def sql_escape(str)
