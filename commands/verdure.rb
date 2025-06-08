@@ -1,5 +1,8 @@
 require 'java'
 require 'fileutils'
+require 'open3'
+require 'digest'
+require 'json'
 
 IRC_BOLD = 2.chr
 
@@ -85,15 +88,77 @@ def stringify_result(result)
   "#{IRC_BOLD}#{artist}#{IRC_BOLD} - #{IRC_BOLD}#{title}#{IRC_BOLD} (album #{IRC_BOLD}#{album}#{IRC_BOLD})"
 end
 
+def read_tags(file)
+  json, status = Open3.capture2e('ffprobe', '-v', 'quiet', '-print_format', 'json', '-show_entries', 'format_tags=title,artist,album,track:stream_tags=title,artist,album,track', file)
+
+  unless status.success?
+    STDERR.puts("[verdure] read_tags failed: #{json}")
+    return nil
+  end
+
+  data = JSON.parse(json)
+  tags_hash = data['format']['tags'] || data['streams'].filter { |e| e.key?('tags') && e['tags'].key?('track') }.first['tags']
+
+  if tags_hash.nil?
+    STDERR.puts("[verdure] Could not find tags hash in JSON: #{json}")
+    return nil
+  end
+
+  {
+    album: tags_hash['album'] || tags_hash['ALBUM'],
+    artist: tags_hash['artist'] || tags_hash['ARTIST'],
+    title: tags_hash['title'] || tags_hash['TITLE'],
+  }
+end
+
 if result_data.length == 0
   puts "No results found"
 elsif result_data.length == 1
-  sub_path, *_ = result_data[0]
+  sub_path, r_title, r_artist, r_album = result_data[0]
   file = File.join(SOURCE_FOLDER, sub_path)
+  file_tags = read_tags(file)
+  if file_tags.nil?
+    # Fall back to the tags given by navidrome
+    file_tags = {
+      album: r_album,
+      artist: r_artist,
+      title: r_title,
+    }
+  end
+
+  # Create a RNG seeded from the SHA256 hash of the file path
+  rng = Random.new(Digest::SHA256.digest(sub_path).unpack('Q*').reduce(1) { |a, e| (a << 64) + e })
+
   name = nil
-  name = (ADJECTIVES.sample(2) + NOUNS.sample(1)).join('-') while name.nil? || File.exist?(File.join(TARGET_FOLDER, name))
+
+  100.times do
+    # Ensure these are sampled in a deterministic order
+    parts = []
+    parts << ADJECTIVES.sample(random: rng)
+    parts << ADJECTIVES.sample(random: rng)
+    parts << NOUNS.sample(random: rng)
+
+    name = parts.join('-')
+    target_path = File.join(TARGET_FOLDER, name)
+    if File.exist?(target_path)
+      # File exists, so only overwrite it if it has the same tags, otherwise try again
+      target_tags = read_tags(target_path)
+      STDERR.puts("[verdure] overwriting existing file #{target_path}")
+      break if target_tags == file_tags
+    else
+      # File does not yet exist, so create it with the current name
+      break
+    end
+  end
+
+  if name.nil?
+    STDERR.puts '[verdure] Source file: ' + file
+    puts 'Could not generate a suitable filename after 100 tries :('
+    exit
+  end
 
   target_filename = File.join(TARGET_FOLDER, name + '.ogg')
+  FileUtils.rm(target_filename) if File.exist?(target_filename)
   cover_base_filename = File.join(TARGET_FOLDER, name)
 
   # Convert to 128k ogg opus
