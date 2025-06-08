@@ -89,15 +89,43 @@ def stringify_result(result)
 end
 
 def read_tags(file)
-  stdin, json_stream, wait_thr = Open3.popen2e('/usr/bin/ffprobe', '-v', 'quiet', '-print_format', 'json', '-show_entries', 'format_tags=title,artist,album,track:stream_tags=title,artist,album,track', file)
-  status = wait_thr.value
+  json = String.new
 
-  stdin.close
-  json = json_stream.read
-  json_stream.close
+  begin
+    # build the ffprobe command as a Ruby Array
+    cmd = [
+      "/usr/bin/ffprobe",
+      "-v", "quiet",
+      "-print_format", "json",
+      "-show_entries",
+      "format_tags=title,artist,album,track:stream_tags=title,artist,album,track",
+      file_path
+    ]
 
-  unless status.success?
-    STDERR.puts("[verdure] read_tags failed: #{json}")
+    # JRuby lets you reference Java classes directly under Java::...
+    pb = java.lang.ProcessBuilder.new(cmd.to_java(:string))
+    pb.redirectErrorStream(true)  # merge stderr into stdout
+    process = pb.start
+
+    # wrap the process input stream in a Java BufferedReader
+    reader = java.io.BufferedReader.new(
+      java.io.InputStreamReader.new(process.getInputStream, "UTF-8")
+    )
+
+    # read all lines
+    while (line = reader.read_line)
+      json << line << "\n"
+    end
+    reader.close
+
+    # wait for ffprobe to exit
+    exit_code = process.wait_for
+    unless exit_code == 0
+      STDERR.puts("[verdure] read_tags failed: #{json}")
+      return nil
+    end
+  rescue => e
+    STDERR.puts("[verdure] read_tags exception: #{e.message}")
     return nil
   end
 
